@@ -26,4 +26,13 @@ function borrowBook($b,$a,$tgl){
     return "Peminjaman Berhasil!";
 }
   
+ function returnBook($id,$tgl){
+    global $conn;
+    $p = $conn->query("SELECT * FROM peminjaman WHERE id_pinjam=$id")->fetch_assoc();
+    if ($p['status']=="Kembali") return "Sudah dikembalikan!";
+    $conn->query("UPDATE buku SET jumlah_stok = jumlah_stok + 1 WHERE id_buku=".$p['id_buku']);
+    $stmt=$conn->prepare("UPDATE peminjaman SET status='Kembali',tanggal_kembali=? WHERE id_pinjam=?");
+    $stmt->bind_param("si",$tgl,$id); $stmt->execute();
+    return "Pengembalian Berhasil!";
+}
  
