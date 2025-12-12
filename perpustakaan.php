@@ -35,4 +35,27 @@ function borrowBook($b,$a,$tgl){
     $stmt->bind_param("si",$tgl,$id); $stmt->execute();
     return "Pengembalian Berhasil!";
 }
- 
+
+function getLoans(){ global $conn;
+    return $conn->query("
+        SELECT p.*, b.judul, a.nama
+        FROM peminjaman p
+        JOIN buku b ON p.id_buku=b.id_buku
+        JOIN anggota a ON p.id_anggota=a.id_anggota
+        ORDER BY id_pinjam DESC
+    ");
+}
+
+$page = $_GET['page'] ?? 'home';
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sistem Perpustakaan</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
