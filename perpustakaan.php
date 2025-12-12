@@ -59,3 +59,74 @@ $page = $_GET['page'] ?? 'home';
 
 <body class="bg-light">
 
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="?page=home">Perpustakaan</a>
+    <div>
+      <a class="btn btn-light me-2" href="?page=buku">Buku</a>
+      <a class="btn btn-light me-2" href="?page=anggota">Anggota</a>
+      <a class="btn btn-light" href="?page=transaksi">Transaksi</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<?php
+
+if ($page == "home"): ?>
+    <div class="p-5 bg-white shadow-sm rounded">
+        <h2>Selamat Datang 👋</h2>
+        <p class="mt-3">Gunakan menu di atas untuk mengelola buku, anggota, dan transaksi peminjaman.</p>
+    </div>
+<?php endif; ?>
+
+
+<?php
+
+if ($page == "buku"):
+
+if (isset($_POST['tambah'])) addBook($_POST['judul'],$_POST['penulis'],$_POST['tahun'],$_POST['stok']);
+if (isset($_POST['hapus'])) deleteBook($_POST['id']);
+?>
+
+<h2 class="mb-3">Manajemen Buku</h2>
+
+<div class="card mb-4">
+  <div class="card-header bg-success text-white">Tambah Buku</div>
+  <div class="card-body">
+    <form method="post">
+        <div class="row g-2">
+            <div class="col"><input class="form-control" name="judul" placeholder="Judul"></div>
+            <div class="col"><input class="form-control" name="penulis" placeholder="Penulis"></div>
+            <div class="col"><input class="form-control" type="number" name="tahun" placeholder="Tahun"></div>
+            <div class="col"><input class="form-control" type="number" name="stok" placeholder="Stok"></div>
+            <div class="col"><button class="btn btn-success" name="tambah">Tambah</button></div>
+        </div>
+    </form>
+  </div>
+</div>
+
+<table class="table table-striped table-bordered shadow-sm">
+    <tr class="table-primary">
+        <th>ID</th><th>Judul</th><th>Penulis</th><th>Tahun</th><th>Stok</th><th>Aksi</th>
+    </tr>
+
+    <?php $data = getBooks(); while ($b = $data->fetch_assoc()): ?>
+    <tr>
+        <td><?= $b['id_buku'] ?></td>
+        <td><?= $b['judul'] ?></td>
+        <td><?= $b['penulis'] ?></td>
+        <td><?= $b['tahun_terbit'] ?></td>
+        <td><?= $b['jumlah_stok'] ?></td>
+        <td>
+            <form method="post" onsubmit="return confirm('Hapus buku ini?');">
+                <input type="hidden" name="id" value="<?= $b['id_buku'] ?>">
+                <button class="btn btn-danger btn-sm" name="hapus">Hapus</button>
+            </form>
+        </td>
+    </tr>
+    <?php endwhile; ?>
+</table>
+<?php endif; ?>
