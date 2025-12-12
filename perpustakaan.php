@@ -130,3 +130,51 @@ if (isset($_POST['hapus'])) deleteBook($_POST['id']);
     <?php endwhile; ?>
 </table>
 <?php endif; ?>
+
+
+<?php
+
+if ($page == "anggota"):
+
+if (isset($_POST['tambah'])) addMember($_POST['nama'],$_POST['alamat'],$_POST['telp']);
+if (isset($_POST['hapus'])) deleteMember($_POST['id']);
+?>
+
+<h2 class="mb-3">Manajemen Anggota</h2>
+
+<div class="card mb-4">
+  <div class="card-header bg-info text-white">Tambah Anggota</div>
+  <div class="card-body">
+    <form method="post">
+        <div class="row g-2">
+            <div class="col"><input class="form-control" name="nama" placeholder="Nama"></div>
+            <div class="col"><input class="form-control" name="alamat" placeholder="Alamat"></div>
+            <div class="col"><input class="form-control" name="telp" placeholder="No Telp"></div>
+            <div class="col"><button class="btn btn-info" name="tambah">Tambah</button></div>
+        </div>
+    </form>
+  </div>
+</div>
+
+<table class="table table-striped table-bordered shadow-sm">
+    <tr class="table-primary">
+        <th>ID</th><th>Nama</th><th>Alamat</th><th>Telepon</th><th>Aksi</th>
+    </tr>
+
+    <?php $data = getMembers(); while ($m = $data->fetch_assoc()): ?>
+    <tr>
+        <td><?= $m['id_anggota'] ?></td>
+        <td><?= $m['nama'] ?></td>
+        <td><?= $m['alamat'] ?></td>
+        <td><?= $m['no_telp'] ?></td>
+        <td>
+            <form method="post" onsubmit="return confirm('Hapus anggota ini?');">
+                <input type="hidden" name="id" value="<?= $m['id_anggota'] ?>">
+                <button class="btn btn-danger btn-sm" name="hapus">Hapus</button>
+            </form>
+        </td>
+    </tr>
+    <?php endwhile; ?>
+</table>
+<?php endif; ?>
+ 
