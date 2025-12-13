@@ -278,3 +278,16 @@ def show_transaksi():
         else:
             st.info("Belum ada riwayat transaksi.")
 
+
+st.sidebar.title("🛠 Navigasi")
+menu = ["Dashboard", "Manajemen Buku", "Manajemen Anggota", "Peminjaman/Pengembalian"]
+choice = st.sidebar.selectbox("Pilih Halaman", menu)
+
+if choice == "Dashboard":
+    show_dashboard()
+elif choice == "Manajemen Buku":
+    show_buku()
+elif choice == "Manajemen Anggota":
+    show_anggota()
+elif choice == "Peminjaman/Pengembalian":
+    show_transaksi()
