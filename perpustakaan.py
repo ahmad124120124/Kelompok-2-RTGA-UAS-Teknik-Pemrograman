@@ -45,3 +45,17 @@ def show_dashboard():
     st.divider()
 
     col_pinjam, col_stok = st.columns(2)
+
+    with col_pinjam:
+        st.subheader("📊 Transaksi Peminjaman Terbaru")
+        if not pinjam_df.empty:
+            display_df = pinjam_df.tail(10).sort_values(by='Tanggal_Pinjam', ascending=False)
+           
+            display_df = display_df.merge(buku_df[['ID_Buku', 'Judul']], on='ID_Buku', how='left')
+            display_df = display_df.merge(anggota_df[['ID_Anggota', 'Nama']], on='ID_Anggota', how='left')
+
+            st.dataframe(display_df[[
+                'ID_Pinjam', 'Judul', 'Nama', 'Tanggal_Pinjam', 'Status'
+            ]], use_container_width=True)
+        else:
+            st.info("Belum ada data peminjaman.")
