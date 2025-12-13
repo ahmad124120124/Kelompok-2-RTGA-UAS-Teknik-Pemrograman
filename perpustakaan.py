@@ -127,3 +127,67 @@ def show_buku():
                     buku_df = buku_df[buku_df['ID_Buku'] != selected_id].reset_index(drop=True)
                     st.warning(f"Buku (ID {selected_id}) berhasil dihapus!")
                     update_and_save(buku_df=buku_df)
+
+def show_anggota():
+    st.title("👤 Manajemen Anggota")
+    anggota_df = st.session_state.anggota_df
+   
+    tab1, tab2, tab3 = st.tabs(["Lihat & Cari", "Tambah Anggota", "Edit & Hapus"])
+
+    with tab1:
+        st.subheader("Daftar Semua Anggota")
+        st.dataframe(anggota_df, use_container_width=True)
+
+    with tab2:
+        st.subheader("Form Tambah Anggota Baru")
+        with st.form("tambah_anggota"):
+            nama = st.text_input("Nama", key="t_nama_a")
+            alamat = st.text_area("Alamat", key="t_alamat_a")
+            telp = st.text_input("Nomor Telepon", key="t_telp_a")
+            submitted = st.form_submit_button("Tambah Anggota", type="primary")
+
+            if submitted:
+                new_id = get_new_id(anggota_df, 'ID_Anggota')
+                new_row = pd.DataFrame([{
+                    'ID_Anggota': new_id, 'Nama': nama, 'Alamat': alamat, 'No_Telp': telp
+                }])
+                st.success(f"Anggota '{nama}' berhasil ditambahkan dengan ID {new_id}!")
+                update_and_save(anggota_df=pd.concat([anggota_df, new_row], ignore_index=True))
+
+    with tab3:
+        st.subheader("Edit/Hapus Anggota")
+       
+        member_options = anggota_df['ID_Anggota'].astype(str) + ' - ' + anggota_df['Nama']
+        selected_member = st.selectbox("Pilih Anggota yang Akan Diedit/Dihapus", member_options.tolist(), index=None)
+       
+        if selected_member:
+            selected_id = int(selected_member.split(' - ')[0])
+            member_data = anggota_df[anggota_df['ID_Anggota'] == selected_id].iloc[0]
+           
+            st.markdown("---")
+            st.text(f"Mengedit Anggota ID: {selected_id}")
+  
+            with st.form("edit_anggota"):
+                e_nama = st.text_input("Nama", value=member_data['Nama'])
+                e_alamat = st.text_area("Alamat", value=member_data['Alamat'])
+                e_telp = st.text_input("Nomor Telepon", value=member_data['No_Telp'])
+
+                col_edit, col_delete = st.columns(2)
+               
+                with col_edit:
+                    edited = st.form_submit_button("Simpan Perubahan", type="primary")
+                with col_delete:
+                    deleted = st.form_submit_button("Hapus Anggota", type="secondary")
+
+                if edited:
+                    idx = anggota_df[anggota_df['ID_Anggota'] == selected_id].index[0]
+                    anggota_df.loc[idx, 'Nama'] = e_nama
+                    anggota_df.loc[idx, 'Alamat'] = e_alamat
+                    anggota_df.loc[idx, 'No_Telp'] = e_telp
+                    st.success(f"Anggota '{e_nama}' (ID {selected_id}) berhasil diperbarui!")
+                    update_and_save(anggota_df=anggota_df)
+
+                if deleted:
+                    anggota_df = anggota_df[anggota_df['ID_Anggota'] != selected_id].reset_index(drop=True)
+                    st.warning(f"Anggota (ID {selected_id}) berhasil dihapus!")
+                    update_and_save(anggota_df=anggota_df)
