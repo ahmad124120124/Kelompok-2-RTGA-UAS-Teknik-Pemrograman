@@ -59,3 +59,71 @@ def show_dashboard():
             ]], use_container_width=True)
         else:
             st.info("Belum ada data peminjaman.")
+
+def show_buku():
+    st.title("📚 Manajemen Buku")
+    buku_df = st.session_state.buku_df
+   
+    tab1, tab2, tab3 = st.tabs(["Lihat & Cari", "Tambah Buku", "Edit & Hapus"])
+   
+    with tab1:
+        st.subheader("Daftar Semua Buku")
+        st.dataframe(buku_df, use_container_width=True)
+
+    with tab2:
+        st.subheader("Form Tambah Buku Baru")
+        with st.form("tambah_buku"):
+            judul = st.text_input("Judul", key="t_judul")
+            penulis = st.text_input("Penulis", key="t_penulis")
+            tahun = st.number_input("Tahun Terbit", min_value=1500, max_value=2050, step=1, value=datetime.date.today().year, key="t_tahun")
+            stok = st.number_input("Jumlah Stok", min_value=1, step=1, key="t_stok")
+            submitted = st.form_submit_button("Tambah Buku", type="primary")
+
+            if submitted:
+                new_id = get_new_id(buku_df, 'ID_Buku')
+                new_row = pd.DataFrame([{
+                    'ID_Buku': new_id, 'Judul': judul, 'Penulis': penulis,
+                    'Tahun_Terbit': int(tahun), 'Jumlah_Stok': int(stok)
+                }])
+                st.success(f"Buku '{judul}' berhasil ditambahkan dengan ID {new_id}!")
+                update_and_save(buku_df=pd.concat([buku_df, new_row], ignore_index=True))
+
+    with tab3:
+        st.subheader("Edit/Hapus Buku")
+       
+        book_options = buku_df['ID_Buku'].astype(str) + ' - ' + buku_df['Judul']
+        selected_book = st.selectbox("Pilih Buku yang Akan Diedit/Dihapus", book_options.tolist(), index=None)
+       
+        if selected_book:
+            selected_id = int(selected_book.split(' - ')[0])
+            book_data = buku_df[buku_df['ID_Buku'] == selected_id].iloc[0]
+           
+            st.markdown("---")
+            st.text(f"Mengedit Buku ID: {selected_id}")
+
+            with st.form("edit_buku"):
+                e_judul = st.text_input("Judul", value=book_data['Judul'])
+                e_penulis = st.text_input("Penulis", value=book_data['Penulis'])
+                e_tahun = st.number_input("Tahun Terbit", min_value=1500, max_value=2050, step=1, value=book_data['Tahun_Terbit'])
+                e_stok = st.number_input("Jumlah Stok", min_value=0, step=1, value=book_data['Jumlah_Stok'])
+
+                col_edit, col_delete = st.columns(2)
+               
+                with col_edit:
+                    edited = st.form_submit_button("Simpan Perubahan", type="primary")
+                with col_delete:
+                    deleted = st.form_submit_button("Hapus Buku", type="secondary")
+
+                if edited:
+                    idx = buku_df[buku_df['ID_Buku'] == selected_id].index[0]
+                    buku_df.loc[idx, 'Judul'] = e_judul
+                    buku_df.loc[idx, 'Penulis'] = e_penulis
+                    buku_df.loc[idx, 'Tahun_Terbit'] = int(e_tahun)
+                    buku_df.loc[idx, 'Jumlah_Stok'] = int(e_stok)
+                    st.success(f"Buku '{e_judul}' (ID {selected_id}) berhasil diperbarui!")
+                    update_and_save(buku_df=buku_df)
+
+                if deleted:
+                    buku_df = buku_df[buku_df['ID_Buku'] != selected_id].reset_index(drop=True)
+                    st.warning(f"Buku (ID {selected_id}) berhasil dihapus!")
+                    update_and_save(buku_df=buku_df)
