@@ -191,3 +191,90 @@ def show_anggota():
                     anggota_df = anggota_df[anggota_df['ID_Anggota'] != selected_id].reset_index(drop=True)
                     st.warning(f"Anggota (ID {selected_id}) berhasil dihapus!")
                     update_and_save(anggota_df=anggota_df)
+
+def show_transaksi():
+    st.title("🔄 Sistem Peminjaman dan Pengembalian")
+   
+    buku_df = st.session_state.buku_df
+    anggota_df = st.session_state.anggota_df
+    pinjam_df = st.session_state.pinjam_df
+   
+    tab1, tab2, tab3 = st.tabs(["Peminjaman", "Pengembalian", "Laporan Transaksi"])
+
+    with tab1:
+        st.subheader("Form Peminjaman Buku")
+        if buku_df.empty or anggota_df.empty:
+             st.error("Silakan tambahkan data *Buku* dan *Anggota* terlebih dahulu.")
+        else:
+            with st.form("form_pinjam"):
+                book_options = buku_df['ID_Buku'].astype(str) + ' - ' + buku_df['Judul'] + ' (Stok: ' + buku_df['Jumlah_Stok'].astype(str) + ')'
+                selected_book = st.selectbox("Pilih Buku", book_options.tolist(), index=None, key='s_pinjam_buku')
+               
+                member_options = anggota_df['ID_Anggota'].astype(str) + ' - ' + anggota_df['Nama']
+                selected_member = st.selectbox("Pilih Anggota", member_options.tolist(), index=None, key='s_pinjam_anggota')
+               
+                tgl_pinjam = st.date_input("Tanggal Peminjaman", datetime.date.today(), key='tgl_pinjam')
+               
+                submitted = st.form_submit_button("Proses Peminjaman", type="primary")
+
+                if submitted and selected_book and selected_member:
+                    id_buku = int(selected_book.split(' - ')[0])
+                    id_anggota = int(selected_member.split(' - ')[0])
+
+                    success, msg, *dfs = pinjam_buku(
+                        buku_df.copy(), anggota_df.copy(), pinjam_df.copy(),
+                        id_buku, id_anggota, tgl_pinjam
+                    )
+                   
+                    if success:
+                        st.success(msg)
+                        update_and_save(buku_df=dfs[0], pinjam_df=dfs[1])
+                    else:
+                        st.error(f"Gagal meminjam: {msg}")
+
+    with tab2:
+        st.subheader("Form Pengembalian Buku")
+       
+        pinjaman_aktif = pinjam_df[pinjam_df['Status'] == 'Dipinjam']
+       
+        if pinjaman_aktif.empty:
+            st.info("Tidak ada buku yang sedang dipinjam.")
+        else:
+            pinjaman_display = pinjaman_aktif.merge(buku_df[['ID_Buku', 'Judul']], on='ID_Buku', how='left')
+            pinjaman_display = pinjaman_display.merge(anggota_df[['ID_Anggota', 'Nama']], on='ID_Anggota', how='left')
+           
+            pinjam_options = pinjaman_display['ID_Pinjam'].astype(str) + ' - ' + \
+                             pinjaman_display['Judul'] + ' (Oleh: ' + pinjaman_display['Nama'] + ')'
+           
+            with st.form("form_kembali"):
+                selected_pinjam = st.selectbox("Pilih Transaksi Peminjaman", pinjam_options.tolist(), index=None, key='s_kembali_pinjam')
+                tgl_kembali = st.date_input("Tanggal Pengembalian", datetime.date.today(), key='tgl_kembali')
+               
+                submitted = st.form_submit_button("Proses Pengembalian", type="primary")
+               
+                if submitted and selected_pinjam:
+                    id_pinjam = int(selected_pinjam.split(' - ')[0])
+                   
+                    success, msg, *dfs = kembalikan_buku(
+                        buku_df.copy(), pinjam_df.copy(),
+                        id_pinjam, tgl_kembali
+                    )
+                   
+                    if success:
+                        st.success(msg)
+                        update_and_save(buku_df=dfs[0], pinjam_df=dfs[1])
+                    else:
+                        st.error(f"Gagal mengembalikan: {msg}")
+                       
+    with tab3:
+        st.subheader("Laporan Semua Transaksi")
+        if not pinjam_df.empty:
+            report_df = pinjam_df.merge(buku_df[['ID_Buku', 'Judul']], on='ID_Buku', how='left')
+            report_df = report_df.merge(anggota_df[['ID_Anggota', 'Nama']], on='ID_Anggota', how='left')
+           
+            st.dataframe(report_df[[
+                'ID_Pinjam', 'Judul', 'Nama', 'Tanggal_Pinjam', 'Tanggal_Kembali', 'Status'
+            ]], use_container_width=True)
+        else:
+            st.info("Belum ada riwayat transaksi.")
+
